@@ -2,28 +2,27 @@ use std::fmt::Display;
 use std::fmt;
 use mail_parser::{Message, HeaderValue, Addr, Group};
 
-pub struct Mail{
+pub struct HeaderMail{
     id: u32,
     reg: String,
     from: String,
     subject: String,
+}
+pub struct Mail{
+    header: HeaderMail,
     body: String,
 }
 
 impl Mail {
     pub fn new(id: u32, content: &Message) -> Self{
-        let reg = content.message_id().unwrap().to_string();
-        let from = Self::get_address(&content.from());
-        let subject = content.subject().unwrap_or("").to_string();
+        let header = HeaderMail::new(id, content);
         let body = Self::get_body(content);
         Self{
-            id,
-            reg,
-            from,
-            subject,
+            header,
             body,
         }
     }
+
     fn get_body(content: &Message) -> String{
         let mut s = String::new();
         for part in content.text_bodies(){
@@ -32,6 +31,20 @@ impl Mail {
             }
         }
         s
+    }
+}
+
+impl HeaderMail {
+    pub fn new(id: u32, content: &Message) -> Self{
+        let reg = content.message_id().unwrap().to_string();
+        let from = Self::get_address(content.from());
+        let subject = content.subject().unwrap_or("").to_string();
+        Self{
+            id,
+            reg,
+            from,
+            subject,
+        }
     }
     fn get_from_groups(groups: &Vec<Group>) -> String{
         let mut result = Vec::new();
@@ -74,10 +87,16 @@ impl Mail {
 
 }
 
-impl Display for Mail {
+impl Display for HeaderMail {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Id: {}\nReg: {}\nFrom: {}\nSubject: {}\nBody: {}",
-            self.id, self.reg, self.from, self.subject, self.body)
+        write!(f, "Id: {}\nReg: {}\nFrom: {}\nSubject: {}",
+            self.id, self.reg, self.from, self.subject)
     }
 }
 
+impl Display for Mail {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Id: {}\nReg: {}\nFrom: {}\nSubject: {}\nBody: {}",
+            self.header.id, self.header.reg, self.header.from, self.header.subject, self.body)
+    }
+}

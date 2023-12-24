@@ -4,7 +4,7 @@ use async_imap::Client;
 use futures::TryStreamExt;
 use serde::{Serialize, Deserialize};
 use mail_parser::Message;
-use super::Mail;
+use super::mail::HeaderMail;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ImapServer{
@@ -47,11 +47,11 @@ impl ImapServer{
         Ok(body)
     }
 
-    pub async fn get_unread_mails(&self) -> Result<Vec<Mail>, String>{
+    pub async fn get_unread_mails(&self) -> Result<Vec<HeaderMail>, String>{
         let user = &self.user;
         let password = &self.password;
         let server = self.host.as_str();
-        let mut result:Vec<Mail> = Vec::new();
+        let mut result:Vec<HeaderMail> = Vec::new();
         let imap_addr = (self.host.as_str(), self.port);
         let tcp_stream = TcpStream::connect(imap_addr).await.map_err(|err|
             err.to_string())?;
@@ -67,20 +67,17 @@ impl ImapServer{
             .map_err(|e| e.0).unwrap();
         imap_session.select("INBOX").await.unwrap();
         let mut new_items = imap_session.search("NOT SEEN").await.unwrap();
-        match new_items.drain().next(){
-            Some(identificador) => {
-                let messages_stream = imap_session.fetch(identificador.to_string(), "RFC822").await.unwrap();
-                let messages: Vec<_> = messages_stream.try_collect().await.unwrap();
-                for message in messages {
-                    let id = message.message;
-                    let body = message.body().unwrap();
-                    match Message::parse(body){
-                        Some(content) => result.push(Mail::new(id, &content)),
-                        None => println!("{:?}", body),
-                    }
+        if let Some(identificador) = new_items.drain().next(){
+            let messages_stream = imap_session.fetch(identificador.to_string(), "RFC822").await.unwrap();
+            let messages: Vec<_> = messages_stream.try_collect().await.unwrap();
+            for message in messages {
+                let id = message.message;
+                let body = message.body().unwrap();
+                match Message::parse(body){
+                    Some(content) => result.push(HeaderMail::new(id, &content)),
+                    None => println!("{:?}", body),
                 }
-            },
-            None => {}
+            }
         }
         Ok(result)
     }
