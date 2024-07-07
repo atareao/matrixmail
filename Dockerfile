@@ -9,12 +9,7 @@ RUN apk add --update --no-cache \
             autoconf \
             gcc \
             gdb \
-            git \
-            libdrm-dev \
-            libepoxy-dev \
             make \
-            mesa-dev \
-            strace \
             musl-dev
 
 WORKDIR /app
