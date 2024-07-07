@@ -1,10 +1,10 @@
-version: "3.7"
-
 services:
   matrixmail:
     image: atareao/matrixmail:latest
     container_name: matrixmail
     init: true
     restart: unless-stopped
+    environment:
+      RUST_LOG: DEBUG
     volumes:
       - ./config.yml:/app/config.yml

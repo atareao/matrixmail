@@ -1,47 +1,43 @@
 ###############################################################################
 ## Builder
 ###############################################################################
-FROM rust:1.71 AS builder
+FROM rust:alpine3.20 AS builder
 
 LABEL maintainer="Lorenzo Carbonell <a.k.a. atareao> lorenzo.carbonell.cerezo@gmail.com"
 
-ARG TARGET=x86_64-unknown-linux-musl
-ENV RUST_MUSL_CROSS_TARGET=$TARGET
-ENV OPENSSL_LIB_DIR="/usr/lib/x86_64-linux-gnu"
-ENV OPENSSL_INCLUDE_DIR="/usr/include/openssl"
-
-RUN rustup target add x86_64-unknown-linux-musl && \
-    apt-get update && \
-    apt-get install -y \
-        --no-install-recommends\
-        pkg-config \
-        musl-tools \
-        build-essential \
-        cmake \
-        musl-dev \
-        pkg-config \
-        libssl-dev \
-        && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN apk add --update --no-cache \
+            autoconf \
+            gcc \
+            gdb \
+            git \
+            libdrm-dev \
+            libepoxy-dev \
+            make \
+            mesa-dev \
+            strace \
+            musl-dev
 
 WORKDIR /app
 
 COPY Cargo.toml Cargo.lock ./
 COPY src src
 
-RUN cargo build --release --target x86_64-unknown-linux-musl && \
-    cp /app/target/x86_64-unknown-linux-musl/release/matrixmail /app/matrixmail
+RUN cargo build --release && \
+    cp /app/target/release/matrixmail /app/matrixmail
 
 ###############################################################################
 ## Final image
 ###############################################################################
-FROM alpine:3.18
+FROM alpine:3.20
 
 ENV USER=app
 ENV UID=10001
 
 RUN apk add --update --no-cache \
-            tzdata~=2023 && \
+            ca-certificates \
+            curl \
+            openssl \
+            tzdata~=2024 && \
     rm -rf /var/cache/apk && \
     rm -rf /var/lib/app/lists*
 
