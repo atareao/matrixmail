@@ -1,6 +1,6 @@
 use std::fmt::Display;
 use std::fmt;
-use mail_parser::{Message, HeaderValue, Addr, Group};
+use mail_parser::{Message, HeaderValue, Addr, Address, Group};
 
 pub struct HeaderMail{
     id: u32,
@@ -73,15 +73,13 @@ impl HeaderMail {
         format!("{} <{}>", name, mail)
     }
 
-    fn get_address(header: &HeaderValue) -> String{
-        match header {
-            HeaderValue::Address(address) => Self::get_from_address(address),
-            HeaderValue::AddressList(addresses) => Self::get_from_addresses(addresses),
-            HeaderValue::Text(text) => text.to_string(),
-            HeaderValue::TextList(textlist) => textlist.join(", "),
-            HeaderValue::Group(group) => Self::get_from_addresses(&group.addresses),
-            HeaderValue::GroupList(groups) => Self::get_from_groups(groups),
-            _ => "".to_string(),
+    fn get_address(address: Option<&Address>) -> String{
+        match address{
+            Some(address) => match address {
+                Address::List(addresses) => Self::get_from_addresses(addresses),
+                Address::Group(groups) => Self::get_from_groups(groups),
+            },
+            None => "".to_string(),
         }
     }
 

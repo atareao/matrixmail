@@ -37,6 +37,7 @@ async fn main(){
         let imap_server = configuration.get_imap_server();
         let matrix_client = configuration.get_matrix_client();
         loop{
+            debug!("==== START LOOP ====");
             match imap_server.get_unread_mails().await{
                 Ok(mails) => {
                     for mail in mails.as_slice(){
@@ -53,6 +54,7 @@ async fn main(){
                 },
                 Err(message) => error!("{}", message),
             };
+            debug!("==== END LOOP ====");
             tokio::time::sleep(duration).await;
         }
     });
