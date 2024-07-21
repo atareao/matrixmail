@@ -32,8 +32,8 @@ async fn main(){
             }
         };
         debug!("Configuration: {:?}", &configuration);
-        let sleep_time = configuration.get_pull_time() * 1000;
-        let duration = time::Duration::from_millis(sleep_time);
+        let sleep_time: u64 = configuration.get_pull_time().into();
+        let duration = time::Duration::from_secs(sleep_time);
         let imap_server = configuration.get_imap_server();
         let matrix_client = configuration.get_matrix_client();
         loop{
@@ -69,19 +69,22 @@ async fn main(){
         debug!("Leo");
         match configuration2.matrix_client.sync().await{
             Ok(response) => {
-                match configuration2.save().await{
-                    Ok(()) => {
-                        debug!("Configuration saved");
-                        debug!("Configuration: {:?}", &configuration2);
-                    },
-                    Err(e) => error!("Cant save configuration: {}", e),
-                };
-                if let Some(command) = process_response(&response, &configuration2.matrix_client){
-                    debug!(command);
-                    if let Some(message) = Bot::response(&command).await {
-                        match &configuration2.matrix_client.post(&message).await{
-                            Ok(response) => debug!("Response: {}", response),
-                            Err(e) => error!("Error: {}", e),
+                debug!("Response: {:?}", response);
+                if let Some(response) = response {
+                    match configuration2.save().await{
+                        Ok(()) => {
+                            debug!("Configuration saved");
+                            debug!("Configuration: {:?}", &configuration2);
+                        },
+                        Err(e) => error!("Cant save configuration: {}", e),
+                    };
+                    if let Some(command) = process_response(&response, &configuration2.matrix_client){
+                        debug!(command);
+                        if let Some(message) = Bot::response(&command).await {
+                            match &configuration2.matrix_client.post(&message).await{
+                                Ok(response) => debug!("Response: {}", response),
+                                Err(e) => error!("Error: {}", e),
+                            }
                         }
                     }
                 }

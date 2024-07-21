@@ -27,13 +27,14 @@ fn get_default_since() -> Option<String>{
 
 impl MatrixClient {
 
-    pub async fn sync(&mut self) -> Result<Value, CustomError>{
+    pub async fn sync(&mut self) -> Result<Option<Value>, CustomError>{
         debug!("sync");
         let url = format!("{}://{}/_matrix/client/v3/\
             sync", self.protocol, self.server);
         debug!("url: {}", url);
+        let since = self.since.clone();
         let query = json!({
-            "since": self.since,
+            "since": since,
             "timeout": self.timeout,
         });
         debug!("query: {:?}", query);
@@ -44,8 +45,7 @@ impl MatrixClient {
                           HeaderValue::from_str(&format!("Bearer {}", self.token)).unwrap());
         let client = Client::builder()
             .default_headers(header_map)
-            .build()
-            .unwrap();
+            .build()?;
         let response = client.get(url)
             .query(&query)
             .send()
@@ -53,12 +53,13 @@ impl MatrixClient {
             .json::<Value>()
             .await?;
         debug!("Response: {:?}", response);
-        if let Some(value) = response.get("next_batch"){
-            if let Some(next_batch) = value.as_str(){
+        if let Some(next_batch) = response.get("next_batch")
+            .and_then(|next_batch| next_batch.as_str())
+            .filter(|&next_batch| next_batch != since.unwrap()){
                 self.set_since(Some(next_batch.to_string()));
-            }
+                return Ok(Some(response));
         }
-        Ok(response)
+        Ok(None)
     }
     pub async fn post(&self, message: &str) -> Result<String, CustomError>{
         info!("post_with_matrix");

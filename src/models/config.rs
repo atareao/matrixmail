@@ -6,7 +6,7 @@ use super::{ImapServer, MatrixClient};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Configuration {
-    pull_time: u64,
+    pull_time: u16,
     imap_server: ImapServer,
     pub matrix_client: MatrixClient,
 }
@@ -19,7 +19,7 @@ impl Configuration {
         Ok(serde_yaml::from_str(content)?)
     }
 
-    pub fn get_pull_time(&self) -> u64{
+    pub fn get_pull_time(&self) -> u16{
         info!("get_pull_time");
         self.pull_time
     }
