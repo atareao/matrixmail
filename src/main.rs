@@ -32,8 +32,8 @@ async fn main(){
             }
         };
         debug!("Configuration: {:?}", &configuration);
-        let duration = time::Duration::from_secs(
-            configuration.get_pull_time().into()); // 5 minutes
+        let sleep_time = configuration.get_pull_time() * 1000;
+        let duration = time::Duration::from_millis(sleep_time);
         let imap_server = configuration.get_imap_server();
         let matrix_client = configuration.get_matrix_client();
         loop{
