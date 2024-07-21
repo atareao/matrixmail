@@ -103,38 +103,35 @@ async fn main(){
 
 fn process_response(value: &Value, matrix_client: &MatrixClient) -> Option<String>{
     let sender = matrix_client.get_sender_id();
-    if let Some(rooms) = value.get("rooms"){
-        if let Some(join) = rooms.get("join"){
-            for room_id in join.as_object().unwrap().keys(){
-                if let Some(room) = join.get(room_id){
-                    if let Some(timeline) = room.get("timeline"){
-                        if let Some(events) = timeline.get("events"){
-                            for event in events.as_array().unwrap(){
-                                if let Some(current_sender) = event.get("sender"){
-                                    debug!("Sender: {}", current_sender);
-                                    if sender == current_sender.as_str().unwrap(){
-                                        return None;
-                                    }
-                                }
-                                if let Some(content) = event.get("content"){
-                                    debug!("Evento: {:?}", content);
-                                    let msgtype = content.get("msgtype")
-                                        .unwrap()
-                                        .as_str()
-                                        .unwrap();
-                                    if msgtype == "m.text"{
-                                        let body = content.get("body")
-                                            .unwrap()
-                                            .as_str()
-                                            .unwrap();
-                                        debug!("CONTENIDO: {}", body);
-                                        if body.starts_with('!'){
-                                            return Some(body.to_string());
-                                        }
-                                    }
-                                }
-                            }
+
+    if let Some(rooms) = value.get("rooms")
+        .and_then(|rooms| rooms.get("join"))
+        .and_then(|join| join.as_object()) 
+    {
+        for room in rooms.values() {
+            if let Some(timeline) = room.get("timeline")
+                .and_then(|timeline| timeline.get("events"))
+                .and_then(|events| events.as_array()) 
+            {
+                for event in timeline {
+                    if let Some(current_sender) = event.get("sender")
+                            .and_then(|sender| sender.as_str()) {
+                        debug!("Sender: {}", current_sender);
+                        if sender == current_sender {
+                            return None;
                         }
+                    }
+                    if let Some(body) = event.get("content")
+                        .and_then(|content| {
+                            debug!("Evento: {:?}", content);
+                            content.get("msgtype")
+                                .and_then(|msgtype| msgtype.as_str())
+                                .filter(|&msgtype| msgtype == "m.text")
+                                .and_then(|_| content.get("body"))
+                                .and_then(|body| body.as_str())
+                        }) 
+                    {
+                        return Some(body.to_string());
                     }
                 }
             }
