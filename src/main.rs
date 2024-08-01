@@ -42,7 +42,7 @@ async fn main(){
                 Ok(mails) => {
                     for mail in mails.as_slice(){
                         debug!("{}", &mail);
-                        match matrix_client.post(&mail.to_string()).await{
+                        match matrix_client.post_to_email_room(&mail.to_string()).await{
                             Ok(response) => debug!(response),
                             Err(error_message) => error!(error_message)
 
@@ -81,7 +81,7 @@ async fn main(){
                     if let Some(command) = process_response(&response, &configuration2.matrix_client){
                         debug!(command);
                         if let Some(message) = Bot::response(&command).await {
-                            match &configuration2.matrix_client.post(&message).await{
+                            match &configuration2.matrix_client.post_to_chat_room(&message).await{
                                 Ok(response) => debug!("Response: {}", response),
                                 Err(e) => error!("Error: {}", e),
                             }

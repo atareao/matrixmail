@@ -14,7 +14,8 @@ pub struct MatrixClient{
     protocol: String,
     server: String,
     token: String,
-    room: String,
+    email_room: String,
+    chat_room: String,
     sender: String,
     timeout: u64,
     #[serde(default = "get_default_since")]
@@ -61,14 +62,25 @@ impl MatrixClient {
         }
         Ok(None)
     }
-    pub async fn post(&self, message: &str) -> Result<String, CustomError>{
+
+    pub async fn post_to_chat_room(&self, message: &str) -> Result<String, CustomError>{
+        info!("post_to_chat_room");
+        self.post(&self.chat_room, message).await
+    }
+
+    pub async fn post_to_email_room(&self, message: &str) -> Result<String, CustomError>{
+        info!("post_to_email_room");
+        self.post(&self.email_room, message).await
+    }
+
+    pub async fn post(&self, room: &str, message: &str) -> Result<String, CustomError>{
         info!("post_with_matrix");
         debug!("Post with matrix: {}", message);
         let url = format!(
             "{}://{}/_matrix/client/v3/rooms/{}:{}/send/m.room.message/{}",
             self.protocol,
             self.server,
-            encode(self.room.as_str()),
+            encode(room),
             self.server,
             Self::ts(),
         );
