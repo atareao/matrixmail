@@ -14,8 +14,8 @@ pub struct MatrixClient{
     protocol: String,
     server: String,
     token: String,
-    email_room: String,
-    chat_room: String,
+    pub email_room: String,
+    pub chat_room: String,
     sender: String,
     timeout: u64,
     #[serde(default = "get_default_since")]
@@ -84,15 +84,18 @@ impl MatrixClient {
             self.server,
             Self::ts(),
         );
+        debug!("Url: {}", url);
         let body = json!({
             "msgtype": "m.text",
             "body": message,
         });
+        debug!("Body: {}", body);
         let mut header_map = HeaderMap::new();
         header_map.insert(HeaderName::from_str("Content-type").unwrap(),
                           HeaderValue::from_str("application/json").unwrap());
         header_map.append(HeaderName::from_str("Authorization").unwrap(),
                           HeaderValue::from_str(&format!("Bearer {}", self.token)).unwrap());
+        debug!("Header: {:?}", header_map);
         Self::_put(&url, header_map, &body)
             .await
     }

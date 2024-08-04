@@ -66,7 +66,7 @@ async fn main(){
         }
     };
     loop {
-        debug!("Leo");
+        debug!("===== Leo =====");
         match configuration2.matrix_client.sync().await{
             Ok(response) => {
                 debug!("Response: {:?}", response);
@@ -78,12 +78,20 @@ async fn main(){
                         },
                         Err(e) => error!("Cant save configuration: {}", e),
                     };
-                    if let Some(command) = process_response(&response, &configuration2.matrix_client){
+                    if let Some((room, command)) = process_response(&response, &configuration2.matrix_client){
                         debug!(command);
                         if let Some(message) = Bot::response(&command).await {
-                            match &configuration2.matrix_client.post_to_chat_room(&message).await{
-                                Ok(response) => debug!("Response: {}", response),
-                                Err(e) => error!("Error: {}", e),
+                            if configuration2.matrix_client.chat_room == room{
+                                match &configuration2.matrix_client.post_to_chat_room(&message).await{
+                                    Ok(response) => debug!("Response: {}", response),
+                                    Err(e) => error!("Error: {}", e),
+                                }
+                            }
+                            if configuration2.matrix_client.email_room == room{
+                                match &configuration2.matrix_client.post_to_email_room(&message).await{
+                                    Ok(response) => debug!("Response: {}", response),
+                                    Err(e) => error!("Error: {}", e),
+                                }
                             }
                         }
                     }
@@ -104,15 +112,21 @@ async fn main(){
     }
 }
 
-fn process_response(value: &Value, matrix_client: &MatrixClient) -> Option<String>{
+fn process_response(value: &Value, matrix_client: &MatrixClient) -> Option<(String, String)>{
     let sender = matrix_client.get_sender_id();
 
     if let Some(rooms) = value.get("rooms")
         .and_then(|rooms| rooms.get("join"))
-        .and_then(|join| join.as_object()) 
+        .and_then(|selected_room| selected_room.as_object()) 
     {
-        for room in rooms.values() {
-            if let Some(timeline) = room.get("timeline")
+        for (room, room_value) in rooms {
+            let compare_room = room.split(':').next().unwrap();
+            debug!("Compare room: {compare_room}");
+            debug!("=== {} <=> {} / {} / {} ===", matrix_client.chat_room, compare_room, room, room_value);
+            if compare_room != matrix_client.email_room && compare_room != matrix_client.chat_room{
+                return None
+            }
+            if let Some(timeline) = room_value.get("timeline")
                 .and_then(|timeline| timeline.get("events"))
                 .and_then(|events| events.as_array()) 
             {
@@ -134,7 +148,7 @@ fn process_response(value: &Value, matrix_client: &MatrixClient) -> Option<Strin
                                 .and_then(|body| body.as_str())
                         }) 
                     {
-                        return Some(body.to_string());
+                        return Some((compare_room.to_string(),body.to_string()));
                     }
                 }
             }
