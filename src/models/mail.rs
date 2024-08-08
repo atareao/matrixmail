@@ -1,6 +1,6 @@
 use std::fmt::Display;
 use std::fmt;
-use mail_parser::{Message, HeaderValue, Addr, Address, Group};
+use mail_parser::{Message, Addr, Address, Group};
 
 pub struct HeaderMail{
     id: u32,
