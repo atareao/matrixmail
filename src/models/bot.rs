@@ -1,10 +1,11 @@
 pub struct Bot;
 use std::time::{SystemTime, UNIX_EPOCH};
+use super::{BotError, OpenAIClient};
 
 use serde_json::json;
 
 impl Bot{
-    pub async fn response(command: &str) -> Option<String>{
+    pub async fn response(command: &str, openai_client: &mut OpenAIClient) -> Option<String>{
         let command = command.to_lowercase();
         if command == "!hola"{
             Some("Coca Cola".to_string())
@@ -28,6 +29,15 @@ impl Bot{
                 .text()
                 .await
                 .ok()
+        }else if command.starts_with("!historia") {
+            let pregunta = command.trim_start_matches("!historia").trim();
+            match openai_client.send_message(pregunta).await {
+                Ok(respuesta) => Some(respuesta),
+                Err(e) => Some(format!("Error consultando OpenAI: {e}")),
+            }
+        }else if command == "!clean"{
+            openai_client.clear_messages();
+            Some("Historial de mensajes limpiado".to_string())
         }else{
             None
         }

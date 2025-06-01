@@ -2,13 +2,14 @@ use serde::{Serialize, Deserialize};
 use tracing::{info, debug};
 use super::CustomError;
 
-use super::{ImapServer, MatrixClient};
+use super::{ImapServer, MatrixClient, OpenAIClient};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Configuration {
     pull_time: u16,
     imap_server: ImapServer,
     pub matrix_client: MatrixClient,
+    pub openai_client: OpenAIClient,
 }
 
 
@@ -32,6 +33,11 @@ impl Configuration {
     pub fn get_matrix_client(&self) -> &MatrixClient{
         info!("get_matrix_client");
         &self.matrix_client
+    }
+
+    pub fn get_openai_client(&self) -> OpenAIClient{
+        info!("get_openai_client");
+        self.openai_client.clone()
     }
 
     pub async fn read() -> Result<Configuration, CustomError>{
