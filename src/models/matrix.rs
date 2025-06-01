@@ -6,6 +6,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use tracing::{info, debug};
 use reqwest::{Client, header::{HeaderMap, HeaderValue,
     HeaderName}};
+use pulldown_cmark::{Parser, html::push_html};
 
 use super::CustomError;
 
@@ -73,9 +74,8 @@ impl MatrixClient {
         self.post(&self.email_room, message).await
     }
 
-    pub async fn post(&self, room: &str, message: &str) -> Result<String, CustomError>{
+    pub async fn post(&self, room: &str, markdown: &str) -> Result<String, CustomError>{
         info!("post_with_matrix");
-        debug!("Post with matrix: {}", message);
         let url = format!(
             "{}://{}/_matrix/client/v3/rooms/{}:{}/send/m.room.message/{}",
             self.protocol,
@@ -85,9 +85,15 @@ impl MatrixClient {
             Self::ts(),
         );
         debug!("Url: {}", url);
+        let parser = Parser::new(&markdown);
+        let mut html = String::new();
+        push_html(&mut html, parser);
+        debug!("Post with matrix: {}\n{}", markdown, html);
         let body = json!({
             "msgtype": "m.text",
-            "body": message,
+            "body": markdown,
+            "format": "org.matrix.custom.html",
+            "formatted_body": html,
         });
         debug!("Body: {}", body);
         let mut header_map = HeaderMap::new();
