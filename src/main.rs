@@ -56,6 +56,7 @@ async fn main() {
         }
     };
     let mut openai_client = configuration2.get_openai_client();
+    let keys = openai_client.prompts.keys().cloned().collect::<Vec<_>>();
     loop {
         debug!("===== Leo =====");
         match configuration2.matrix_client.sync().await {
@@ -73,7 +74,7 @@ async fn main() {
                         process_response(&response, &configuration2.matrix_client)
                     {
                         debug!(command);
-                        if let Some(message) = Bot::response(&command, &mut openai_client).await {
+                        if let Some(message) = Bot::response(&command, &mut openai_client, &keys).await {
                             if configuration2.matrix_client.chat_room == room {
                                 match &configuration2
                                     .matrix_client
