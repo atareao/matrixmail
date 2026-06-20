@@ -1,7 +1,9 @@
 [package]
 name = "matrixmail"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
+description = "Bridge between IMAP email and Matrix chat rooms with LLM-powered responses"
+license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
