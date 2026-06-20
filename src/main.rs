@@ -163,3 +163,161 @@ fn process_response(value: &Value, matrix_client: &MatrixClient) -> Option<(Stri
     }
     None
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    fn create_matrix_client() -> MatrixClient {
+        serde_json::from_value(json!({
+            "protocol": "https",
+            "server": "matrix.example.com",
+            "token": "test-token",
+            "email_room": "!email",
+            "chat_room": "!chat",
+            "sender": "testuser",
+            "timeout": 30000,
+            "since": null
+        }))
+        .unwrap()
+    }
+
+    #[test]
+    fn process_response_no_rooms_returns_none() {
+        let value = json!({});
+        let client = create_matrix_client();
+        assert!(process_response(&value, &client).is_none());
+    }
+
+    #[test]
+    fn process_response_no_join_rooms_returns_none() {
+        let value = json!({"rooms": {}});
+        let client = create_matrix_client();
+        assert!(process_response(&value, &client).is_none());
+    }
+
+    #[test]
+    fn process_response_wrong_room_returns_none() {
+        let value = json!({
+            "rooms": {
+                "join": {
+                    "!other:example.com": {
+                        "timeline": {
+                            "events": [{
+                                "sender": "@other:example.com",
+                                "content": {
+                                    "msgtype": "m.text",
+                                    "body": "hello"
+                                }
+                            }]
+                        }
+                    }
+                }
+            }
+        });
+        let client = create_matrix_client();
+        assert!(process_response(&value, &client).is_none());
+    }
+
+    #[test]
+    fn process_response_own_message_returns_none() {
+        let value = json!({
+            "rooms": {
+                "join": {
+                    "!chat:example.com": {
+                        "timeline": {
+                            "events": [{
+                                "sender": "@testuser:matrix.example.com",
+                                "content": {
+                                    "msgtype": "m.text",
+                                    "body": "hello"
+                                }
+                            }]
+                        }
+                    }
+                }
+            }
+        });
+        let client = create_matrix_client();
+        assert!(process_response(&value, &client).is_none());
+    }
+
+    #[test]
+    fn process_response_valid_command_returns_command() {
+        let value = json!({
+            "rooms": {
+                "join": {
+                    "!chat:example.com": {
+                        "timeline": {
+                            "events": [{
+                                "sender": "@otheruser:example.com",
+                                "content": {
+                                    "msgtype": "m.text",
+                                    "body": "!?"
+                                }
+                            }]
+                        }
+                    }
+                }
+            }
+        });
+        let client = create_matrix_client();
+        let result = process_response(&value, &client);
+        assert!(result.is_some());
+        let (room, command) = result.unwrap();
+        assert_eq!(room, "!chat");
+        assert_eq!(command, "!?");
+    }
+
+    #[test]
+    fn process_response_non_text_message_ignored() {
+        let value = json!({
+            "rooms": {
+                "join": {
+                    "!chat:example.com": {
+                        "timeline": {
+                            "events": [{
+                                "sender": "@otheruser:example.com",
+                                "content": {
+                                    "msgtype": "m.image",
+                                    "body": "photo.png",
+                                    "url": "mxc://..."
+                                }
+                            }]
+                        }
+                    }
+                }
+            }
+        });
+        let client = create_matrix_client();
+        assert!(process_response(&value, &client).is_none());
+    }
+
+    #[test]
+    fn process_response_email_room_works() {
+        let value = json!({
+            "rooms": {
+                "join": {
+                    "!email:example.com": {
+                        "timeline": {
+                            "events": [{
+                                "sender": "@otheruser:example.com",
+                                "content": {
+                                    "msgtype": "m.text",
+                                    "body": "test email command"
+                                }
+                            }]
+                        }
+                    }
+                }
+            }
+        });
+        let client = create_matrix_client();
+        let result = process_response(&value, &client);
+        assert!(result.is_some());
+        let (room, command) = result.unwrap();
+        assert_eq!(room, "!email");
+        assert_eq!(command, "test email command");
+    }
+}

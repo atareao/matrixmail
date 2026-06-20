@@ -79,3 +79,50 @@ impl OpenAIClient {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn create_test_client() -> OpenAIClient {
+        let mut prompts = HashMap::new();
+        prompts.insert(
+            "test".to_string(),
+            Prompt {
+                prompt: "test prompt".to_string(),
+                messages: vec![ChatMessage {
+                    role: "system".to_string(),
+                    content: "You are a test bot".to_string(),
+                }],
+            },
+        );
+        OpenAIClient {
+            protocol: "https".to_string(),
+            server: "api.openai.com".to_string(),
+            api_key: "test-key".to_string(),
+            model: "gpt-4".to_string(),
+            temperature: 0.7,
+            prompts,
+        }
+    }
+
+    #[test]
+    fn clear_messages_removes_all_messages() {
+        let mut client = create_test_client();
+        assert!(client.clear_messages("test").is_ok());
+    }
+
+    #[test]
+    fn clear_messages_returns_error_for_unknown_prompt() {
+        let mut client = create_test_client();
+        let result = client.clear_messages("nonexistent");
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn send_message_returns_error_for_unknown_prompt() {
+        let mut client = create_test_client();
+        let result = client.send_message("nonexistent", "hello").await;
+        assert!(result.is_err());
+    }
+}
