@@ -1,4 +1,6 @@
-current_version: 0.1.1
-replaces:
-- file: Cargo.toml
-  pattern: ^version\s*=\s*"{{current_version}}"$
+current_version: 0.1.2
+commit: true
+tag: true
+files:
+  - Cargo.toml:
+      - version
