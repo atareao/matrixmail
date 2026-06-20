@@ -135,3 +135,48 @@ impl MatrixClient {
             .unwrap() .as_secs_f64()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn create_test_client() -> MatrixClient {
+        MatrixClient {
+            protocol: "https".to_string(),
+            server: "matrix.example.com".to_string(),
+            token: "test-token".to_string(),
+            email_room: "!email:example.com".to_string(),
+            chat_room: "!chat:example.com".to_string(),
+            sender: "testuser".to_string(),
+            timeout: 30000,
+            since: None,
+        }
+    }
+
+    #[test]
+    fn set_since_updates_field() {
+        let mut client = create_test_client();
+        client.set_since(Some("next_batch_token".to_string()));
+        assert_eq!(client.since, Some("next_batch_token".to_string()));
+    }
+
+    #[test]
+    fn set_since_clears_field() {
+        let mut client = create_test_client();
+        client.set_since(Some("token".to_string()));
+        client.set_since(None);
+        assert_eq!(client.since, None);
+    }
+
+    #[test]
+    fn get_sender_id_returns_correct_format() {
+        let client = create_test_client();
+        assert_eq!(client.get_sender_id(), "@testuser:matrix.example.com");
+    }
+
+    #[test]
+    fn ts_returns_positive_f64() {
+        let ts = MatrixClient::ts();
+        assert!(ts > 0.0);
+    }
+}

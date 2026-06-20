@@ -1,6 +1,6 @@
 services:
   matrixmail:
-    image: atareao/matrixmail:latest
+    image: ghcr.io/atareao/matrixmail:latest
     container_name: matrixmail
     init: true
     restart: unless-stopped

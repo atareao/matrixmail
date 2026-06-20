@@ -52,3 +52,79 @@ impl Configuration {
        Ok(tokio::fs::write("config.yml", content).await?)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn valid_yaml() -> &'static str {
+        r#"
+pull_time: 60
+imap_server:
+  host: imap.example.com
+  port: 993
+  user: test@example.com
+  password: secret
+matrix_client:
+  protocol: https
+  server: matrix.example.com
+  token: test-token
+  email_room: "!email:example.com"
+  chat_room: "!chat:example.com"
+  sender: testuser
+  timeout: 30000
+openai_client:
+  protocol: https
+  server: api.openai.com
+  api_key: test-key
+  model: gpt-4
+  temperature: 0.7
+  prompts:
+    historia:
+      prompt: Eres un historiador
+      messages: []
+"#
+    }
+
+    #[test]
+    fn configuration_new_valid_yaml() {
+        let config = Configuration::new(valid_yaml());
+        assert!(config.is_ok());
+        let config = config.unwrap();
+        assert_eq!(config.get_pull_time(), 60);
+    }
+
+    #[test]
+    fn configuration_new_invalid_yaml() {
+        let config = Configuration::new("invalid: [yaml: broken");
+        assert!(config.is_err());
+    }
+
+    #[test]
+    fn configuration_new_empty_yaml() {
+        let config = Configuration::new("");
+        assert!(config.is_err());
+    }
+
+    #[test]
+    fn get_imap_server_returns_reference() {
+        let config = Configuration::new(valid_yaml()).unwrap();
+        let _imap = config.get_imap_server();
+    }
+
+    #[test]
+    fn get_matrix_client_returns_reference() {
+        let config = Configuration::new(valid_yaml()).unwrap();
+        let matrix = config.get_matrix_client();
+        assert_eq!(matrix.email_room, "!email:example.com");
+        assert_eq!(matrix.chat_room, "!chat:example.com");
+    }
+
+    #[test]
+    fn get_openai_client_returns_clone() {
+        let config = Configuration::new(valid_yaml()).unwrap();
+        let client = config.get_openai_client();
+        assert_eq!(client.prompts.len(), 1);
+        assert!(client.prompts.contains_key("historia"));
+    }
+}
