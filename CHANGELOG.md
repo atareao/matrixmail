@@ -1,4 +1,9 @@
 # Changelog
+## [0.1.6] - 2026-06-20
+
+### Bug Fixes
+
+- Remove tzdata version pin for latest alpine
 ## [0.1.5] - 2026-06-20
 
 ### Bug Fixes
@@ -8,6 +13,7 @@
 ### Miscellaneous Tasks
 
 - Drop arm/v7 from Docker platforms (unsupported by rust:alpine)
+- Release v0.1.5
 ## [0.1.4] - 2026-06-20
 
 ### Miscellaneous Tasks
