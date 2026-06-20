@@ -1,9 +1,15 @@
 # Changelog
+## [0.1.4] - 2026-06-20
+
+### Miscellaneous Tasks
+
+- Add QEMU setup for multi-platform Docker build
 ## [0.1.3] - 2026-06-20
 
 ### Miscellaneous Tasks
 
 - Prepare release v0.1.3
+- Release v0.1.3
 
 ### Other
 
