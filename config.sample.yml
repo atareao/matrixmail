@@ -1,0 +1,11 @@
+log_level: debug
+pull_time: 300
+imap_server:
+  host: mail.tuservidor.es
+  port: 993
+  user: xxxxxxxxxx
+  password: "xxxxxxxxxxxx"
+matrix_client:
+  url: matrix.tuservidor.es
+  token: xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+  room: "xxxxxxxxxxxxxxxxxxxxxxxxx"

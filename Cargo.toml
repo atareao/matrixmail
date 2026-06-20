@@ -1,0 +1,25 @@
+[package]
+name = "matrixmail"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+async-imap = "0.10.4"
+async-native-tls = "0.5.0"
+async-std = { version = "1.13.1", features = ["attributes"] }
+futures = "0.3.31"
+imap-proto = "0.16.5"
+mail-parser = "0.11.0"
+openssl = { version = "0.10.73", features = ["vendored"] }
+pulldown-cmark = "0.13.0"
+reqwest = { version = "0.12.18", features = ["json"] }
+rustix = { version = "1.0.7", features = ["process"] }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+serde_yaml = "0.9.34"
+tokio = { version = "1.45.1", features = ["full"] }
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+urlencoding = "2.1.3"
