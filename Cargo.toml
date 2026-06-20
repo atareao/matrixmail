@@ -1,6 +1,6 @@
 [package]
 name = "matrixmail"
-version = "0.1.2"
+version = "0.1.6"
 edition = "2021"
 description = "Bridge between IMAP email and Matrix chat rooms with LLM-powered responses"
 license = "MIT"
